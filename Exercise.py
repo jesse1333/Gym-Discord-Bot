@@ -3,10 +3,19 @@ class Exercise:
     weight = 0
     comment = ""
 
-    def __init__(self, name, weight=None, comment=None):
-        self.name = name
-        self.weight = weight
-        self.comment = comment
+    def __init__(self, *args):                                 # args is basically how many parameters are passed in
+        if len(args) == 1:
+            self.name = args[0]
+            self.weight = 0
+            self.comment = ""
+        elif len(args) == 2:
+            self.name = args[0]
+            self.weight = args[1]
+            self.comment = ""
+        elif len(args) == 3:
+            self.name = args[0]
+            self.weight = args[1]
+            self.comment = args[2]
 
     def change_name(self, name):
         self.name = name
