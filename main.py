@@ -5,7 +5,7 @@ from DayType import *
 from Exercise import *
 from discord.ext import commands
 
-TOKEN = 'MTEyODc1NTM3Mzg0Nzg3MTU1MQ.G1IBfS.YtEDyXkFiUElVP5FYDZRnGTPr1cTMZWDy9aP38'
+TOKEN = 'MTEyODc1NTM3Mzg0Nzg3MTU1MQ.GUDrL2.lwm-XO2lcL9dyGL5jZvI8gcILzgcpdqdRqCPJk'
 
 intents = discord.Intents.all()
 
@@ -36,6 +36,18 @@ async def on_ready():                                   # Bot is ready
 @client.command()
 async def help(ctx):
     await ctx.send("Commands: !hello")
+
+    test = Exercise("poo")
+
+    test.print_exercise()
+
+    push_exercises = { "poo" : test}
+
+    poop = "poo"
+
+    push_exercises[poop].change_name()
+
+    test.print_exercise()
 
 
 # Prints out the type of day and the current date
@@ -124,9 +136,9 @@ async def add(ctx):
                     return
 
                 else:
+                    # Creates an exercise object to store in the dictionary
                     push_exercises[user_exercise_name] = Exercise(user_exercise_name)
 
-                    # Creates an exercise object to store in the dictionary
                     await ctx.send("You've added " + push_exercises[user_exercise_name].get_name() + " to push day.")
 
         # Pull case
@@ -320,11 +332,10 @@ async def update(ctx):
 
     # Checks the messages if no errors
     else:
-        # Push Case
+        # Updates push exercises
         if message.content.lower() == "push":
             await ctx.send("Enter the name of an exercise to update:")
 
-            # Removes push exercises
             try:
                 message = await client.wait_for("message",
                                                 check=lambda msg:
@@ -339,85 +350,86 @@ async def update(ctx):
                 # Gets key for exercise from user to update
                 user_exercise_name = message.content
 
-                await ctx.send("Update \"name\", \"weight\", or \"comment\"?")
+                if user_exercise_name in push_exercises:
 
-                try:
-                    message = await client.wait_for("message",
-                                                    check=lambda msg:
-                                                    msg.author == ctx.author and
-                                                    msg.channel == ctx.channel,
-                                                    timeout=30.0)
-                # Timeout condition
-                except asyncio.TimeoutError:
-                    await ctx.send("User Timed Out")
+                    await ctx.send("Update \"name\", \"weight\", or \"comment\"?")
 
-                else:
-                    user_choice = message.content
-
-                    # Updates name
-                    if user_choice.lower() == "name":
-
-                        # Finds exercise to update
-                        if user_exercise_name in push_exercises:
-                            await ctx.send("Enter a new name for " + user_exercise_name + ": ")
-
-                            # Removes push exercises
-                            try:
-                                message = await client.wait_for("message",
-                                                                check=lambda msg:
-                                                                msg.author == ctx.author and
-                                                                msg.channel == ctx.channel,
-                                                                timeout=30.0)
-                            # Timeout condition
-                            except asyncio.TimeoutError:
-                                await ctx.send("User Timed Out")
-
-                            else:
-                                user_input = message.content
-                                push_exercises[user_exercise_name].change_name(user_input)
-                                await ctx.send("Exercise name updated successfully")
-
-
-
-
-
-                        else:
-                            await ctx.send("Exercise does not exist")
-
-
-
-
-
-
-
-
-
-                    #
-                    # elif user_choice.lower() == "weight":
-                    #
-                    # elif user_choice.lower() == "comment":
+                    try:
+                        message = await client.wait_for("message",
+                                                        check=lambda msg:
+                                                        msg.author == ctx.author and
+                                                        msg.channel == ctx.channel,
+                                                        timeout=30.0)
+                    # Timeout condition
+                    except asyncio.TimeoutError:
+                        await ctx.send("User Timed Out")
 
                     else:
-                        await ctx.send("Please enter a valid option")
-                        return
+                        user_choice = message.content
 
+                        # Updates name
+                        if user_choice.lower() == "name":
 
+                            # Finds exercise to update
+                            if user_exercise_name in push_exercises:
+                                await ctx.send("Enter a new name for " + user_exercise_name + ": ")
 
-                # If exercise exists                                (IS CASE SENSITIVE, IMPROVE LATER)
-                if user_exercise_name in push_exercises:
-                    del push_exercises[user_exercise_name]
-                    await ctx.send("Removed " + user_exercise_name + " from push day")
-                    return
+                                try:
+                                    message = await client.wait_for("message",
+                                                                    check=lambda msg:
+                                                                    msg.author == ctx.author and
+                                                                    msg.channel == ctx.channel,
+                                                                    timeout=30.0)
+                                # Timeout condition
+                                except asyncio.TimeoutError:
+                                    await ctx.send("User Timed Out")
 
+                                else:
+                                    user_input = message.content
+
+                                    # updates dictionary key
+                                    push_exercises[user_input] = push_exercises[user_exercise_name]
+                                    del push_exercises[user_exercise_name]
+
+                                    # updates name
+                                    push_exercises[user_input].change_name(user_input)
+                                    await ctx.send("Exercise name updated successfully")
+
+                        # Updates weight
+                        elif user_choice.lower() == "weight":
+                            # Finds exercise to update
+                            if user_exercise_name in push_exercises:
+                                await ctx.send("Enter a new weight for " + user_exercise_name + ": ")
+
+                                try:
+                                    message = await client.wait_for("message",
+                                                                    check=lambda msg:
+                                                                    msg.author == ctx.author and
+                                                                    msg.channel == ctx.channel,
+                                                                    timeout=30.0)
+                                # Timeout condition
+                                except asyncio.TimeoutError:
+                                    await ctx.send("User Timed Out")
+
+                                else:
+                                    user_input = message.content
+
+                                    # updates weight
+                                    push_exercises[user_exercise_name].change_weight(int(user_input))
+                                    await ctx.send("Exercise weight updated successfully")
+
+                        else:
+                            await ctx.send("Invalid input")
+                            return
+                # if user input exercise does not exist
                 else:
-                    await ctx.send("Exercise does not exist, please enter an existing exercise")
+                    await ctx.send("Exercise does not exist")
                     return
 
-        # Pull case
+        # Updates pull exercises
         elif message.content.lower() == "pull":
-            await ctx.send("Enter the name of an exercise to remove:")
+            await ctx.send("Enter the name of an exercise to update:")
 
-            # Removes pull exercises
             try:
                 message = await client.wait_for("message",
                                                 check=lambda msg:
@@ -429,24 +441,88 @@ async def update(ctx):
                 await ctx.send("User Timed Out")
 
             else:
-                # Gets key for exercise from user to remove from dictionary
+                # Gets key for exercise from user to update
                 user_exercise_name = message.content
 
-                # If exercise exists                                (IS CASE SENSITIVE, IMPROVE LATER)
                 if user_exercise_name in pull_exercises:
-                    del pull_exercises[user_exercise_name]
-                    await ctx.send("Removed " + user_exercise_name + " from pull day")
-                    return
 
+                    await ctx.send("Update \"name\", \"weight\", or \"comment\"?")
+
+                    try:
+                        message = await client.wait_for("message",
+                                                        check=lambda msg:
+                                                        msg.author == ctx.author and
+                                                        msg.channel == ctx.channel,
+                                                        timeout=30.0)
+                    # Timeout condition
+                    except asyncio.TimeoutError:
+                        await ctx.send("User Timed Out")
+
+                    else:
+                        user_choice = message.content
+
+                        # Updates name
+                        if user_choice.lower() == "name":
+
+                            # Finds exercise to update
+                            if user_exercise_name in pull_exercises:
+                                await ctx.send("Enter a new name for " + user_exercise_name + ": ")
+
+                                try:
+                                    message = await client.wait_for("message",
+                                                                    check=lambda msg:
+                                                                    msg.author == ctx.author and
+                                                                    msg.channel == ctx.channel,
+                                                                    timeout=30.0)
+                                # Timeout condition
+                                except asyncio.TimeoutError:
+                                    await ctx.send("User Timed Out")
+
+                                else:
+                                    user_input = message.content
+
+                                    # updates dictionary key
+                                    pull_exercises[user_input] = pull_exercises[user_exercise_name]
+                                    del pull_exercises[user_exercise_name]
+
+                                    # updates name
+                                    pull_exercises[user_input].change_name(user_input)
+                                    await ctx.send("Exercise name updated successfully")
+
+                        # Updates weight
+                        elif user_choice.lower() == "weight":
+                            # Finds exercise to update
+                            if user_exercise_name in pull_exercises:
+                                await ctx.send("Enter a new weight for " + user_exercise_name + ": ")
+
+                                try:
+                                    message = await client.wait_for("message",
+                                                                    check=lambda msg:
+                                                                    msg.author == ctx.author and
+                                                                    msg.channel == ctx.channel,
+                                                                    timeout=30.0)
+                                # Timeout condition
+                                except asyncio.TimeoutError:
+                                    await ctx.send("User Timed Out")
+
+                                else:
+                                    user_input = message.content
+
+                                    # updates weight
+                                    pull_exercises[user_exercise_name].change_weight(int(user_input))
+                                    await ctx.send("Exercise weight updated successfully")
+                        else:
+                            await ctx.send("Invalid input")
+                            return
+                # if user input exercise does not exist
                 else:
-                    await ctx.send("Exercise does not exist, please enter an existing exercise")
+                    await ctx.send("Exercise does not exist")
                     return
 
-        # Legs case
+        # Updates leg exercises
         elif message.content.lower() == "legs":
-            await ctx.send("Enter the name of an exercise to remove:")
+            await ctx.send("Enter the name of an exercise to update:")
 
-            # Removes pull exercises
             try:
                 message = await client.wait_for("message",
                                                 check=lambda msg:
@@ -458,20 +534,94 @@ async def update(ctx):
                 await ctx.send("User Timed Out")
 
             else:
-                # Gets key for exercise from user to remove from dictionary
+                # Gets key for exercise from user to update
                 user_exercise_name = message.content
 
-                # If exercise exists                                (IS CASE SENSITIVE, IMPROVE LATER)
                 if user_exercise_name in leg_exercises:
-                    del leg_exercises[user_exercise_name]
-                    await ctx.send("Removed " + user_exercise_name + " from leg day")
-                    return
 
+                    await ctx.send("Update \"name\", \"weight\", or \"comment\"?")
+
+                    try:
+                        message = await client.wait_for("message",
+                                                        check=lambda msg:
+                                                        msg.author == ctx.author and
+                                                        msg.channel == ctx.channel,
+                                                        timeout=30.0)
+                    # Timeout condition
+                    except asyncio.TimeoutError:
+                        await ctx.send("User Timed Out")
+
+                    else:
+                        user_choice = message.content
+
+                        # Updates name
+                        if user_choice.lower() == "name":
+
+                            # Finds exercise to update
+                            if user_exercise_name in leg_exercises:
+                                await ctx.send("Enter a new name for " + user_exercise_name + ": ")
+
+                                try:
+                                    message = await client.wait_for("message",
+                                                                    check=lambda msg:
+                                                                    msg.author == ctx.author and
+                                                                    msg.channel == ctx.channel,
+                                                                    timeout=30.0)
+                                # Timeout condition
+                                except asyncio.TimeoutError:
+                                    await ctx.send("User Timed Out")
+
+                                else:
+                                    user_input = message.content
+
+                                    # updates dictionary key
+                                    leg_exercises[user_input] = leg_exercises[user_exercise_name]
+                                    del leg_exercises[user_exercise_name]
+
+                                    # updates name
+                                    leg_exercises[user_input].change_name(user_input)
+                                    await ctx.send("Exercise name updated successfully")
+
+                        # Updates weight
+                        elif user_choice.lower() == "weight":
+                            # Finds exercise to update
+                            if user_exercise_name in leg_exercises:
+                                await ctx.send("Enter a new weight for " + user_exercise_name + ": ")
+
+                                try:
+                                    message = await client.wait_for("message",
+                                                                    check=lambda msg:
+                                                                    msg.author == ctx.author and
+                                                                    msg.channel == ctx.channel,
+                                                                    timeout=30.0)
+                                # Timeout condition
+                                except asyncio.TimeoutError:
+                                    await ctx.send("User Timed Out")
+
+                                else:
+                                    user_input = message.content
+
+                                    # updates weight
+                                    leg_exercises[user_exercise_name].change_weight(int(user_input))
+                                    await ctx.send("Exercise weight updated successfully")
+                        else:
+                            await ctx.send("Invalid input")
+                            return
+                # if user input exercise does not exist
                 else:
-                    await ctx.send("Exercise does not exist, please enter an existing exercise")
+                    await ctx.send("Exercise does not exist")
                     return
 
         else:
-            await ctx.send("Invalid Input")
+            await ctx.send("Invalid input")
+            return
+
+
+
+
+                    # elif user_choice.lower() == "comment":
+
+
+
 
 client.run(TOKEN)

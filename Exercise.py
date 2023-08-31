@@ -37,6 +37,6 @@ class Exercise:
 
     def print_exercise(self):
         print("Name: " + self.name)
-        print("Weight: " + self.weight)
+        print("Weight: " + str(self.weight))
         print("Comment: " + self.comment)
 
