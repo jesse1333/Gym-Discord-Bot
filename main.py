@@ -5,7 +5,7 @@ from DayType import *
 from Exercise import *
 from discord.ext import commands
 
-TOKEN = 'MTEyODc1NTM3Mzg0Nzg3MTU1MQ.GUDrL2.lwm-XO2lcL9dyGL5jZvI8gcILzgcpdqdRqCPJk'
+TOKEN = 'MTEyODc1NTM3Mzg0Nzg3MTU1MQ.Gnohtz._28nxfALhmriOD75pWRSpIuK6Ygj6yc1Dl8Iy4'
 
 intents = discord.Intents.all()
 
@@ -22,7 +22,6 @@ push_exercises = {}
 pull_exercises = {}
 leg_exercises = {}
 
-
 # Contains dayType objects
 dayTypeList = [pushDay, pullDay, legDay]
 
@@ -37,17 +36,6 @@ async def on_ready():                                   # Bot is ready
 async def help(ctx):
     await ctx.send("Commands: !hello")
 
-    test = Exercise("poo")
-
-    test.print_exercise()
-
-    push_exercises = { "poo" : test}
-
-    poop = "poo"
-
-    push_exercises[poop].change_name()
-
-    test.print_exercise()
 
 
 # Prints out the type of day and the current date
@@ -59,8 +47,13 @@ async def push(ctx):
     await ctx.send("-\n**" + dayTypeList[0].get_day_type() + "**\n**" + dayTypeList[0].get_date() + "**")
 
     for key in push_exercises:
-        await ctx.send(str(counter) + ". " + key + " - " + str(push_exercises[key].weight) + " lbs " +
-                       push_exercises[key].comment)
+        # formatting purposes (if empty comment)
+        if push_exercises[key].comment != "":
+            await ctx.send(str(counter) + ". " + key + " - " + str(push_exercises[key].weight) + " lbs - " +
+                           push_exercises[key].comment)
+        else:
+            await ctx.send(str(counter) + ". " + key + " - " + str(push_exercises[key].weight) + " lbs " +
+                           push_exercises[key].comment)
         counter += 1
 
 
@@ -72,9 +65,14 @@ async def pull(ctx):
     today = date.today()
     await ctx.send("-\n**" + dayTypeList[1].get_day_type() + "**\n**" + dayTypeList[1].get_date() + "**")
 
+    # formatting purposes (if empty comment)
     for key in pull_exercises:
-        await ctx.send(str(counter) + ". " + key + " - " + str(pull_exercises[key].weight) + " lbs " +
-                       pull_exercises[key].comment)
+        if pull_exercises[key].comment != "":
+            await ctx.send(str(counter) + ". " + key + " - " + str(pull_exercises[key].weight) + " lbs - " +
+                           pull_exercises[key].comment)
+        else:
+            await ctx.send(str(counter) + ". " + key + " - " + str(pull_exercises[key].weight) + " lbs " +
+                           pull_exercises[key].comment)
         counter += 1
 
 
@@ -86,9 +84,14 @@ async def legs(ctx):
     today = date.today()
     await ctx.send("-\n**" + dayTypeList[2].get_day_type() + "**\n**" + dayTypeList[2].get_date() + "**")
 
+    # formatting purposes (if empty comment)
     for key in leg_exercises:
-        await ctx.send(str(counter) + ". " + key + " - " + str(leg_exercises[key].weight) + " lbs " +
-                       leg_exercises[key].comment)
+        if leg_exercises[key].comment != "":
+            await ctx.send(str(counter) + ". " + key + " - " + str(leg_exercises[key].weight) + " lbs - " +
+                           leg_exercises[key].comment)
+        else:
+            await ctx.send(str(counter) + ". " + key + " - " + str(leg_exercises[key].weight) + " lbs " +
+                           leg_exercises[key].comment)
         counter += 1
 
 
@@ -418,6 +421,29 @@ async def update(ctx):
                                     push_exercises[user_exercise_name].change_weight(int(user_input))
                                     await ctx.send("Exercise weight updated successfully")
 
+                        # Updates comment
+                        elif user_choice.lower() == "comment":
+                            # Finds exercise to update
+                            if user_exercise_name in push_exercises:
+                                await ctx.send("Enter a new comment for " + user_exercise_name + ": ")
+
+                                try:
+                                    message = await client.wait_for("message",
+                                                                    check=lambda msg:
+                                                                    msg.author == ctx.author and
+                                                                    msg.channel == ctx.channel,
+                                                                    timeout=30.0)
+                                # Timeout condition
+                                except asyncio.TimeoutError:
+                                    await ctx.send("User Timed Out")
+
+                                else:
+                                    user_input = message.content
+
+                                    # updates weight
+                                    push_exercises[user_exercise_name].change_comment(user_input)
+                                    await ctx.send("Exercise comment updated successfully")
+
                         else:
                             await ctx.send("Invalid input")
                             return
@@ -511,6 +537,29 @@ async def update(ctx):
                                     # updates weight
                                     pull_exercises[user_exercise_name].change_weight(int(user_input))
                                     await ctx.send("Exercise weight updated successfully")
+
+                        # Updates comment
+                        elif user_choice.lower() == "comment":
+                            # Finds exercise to update
+                            if user_exercise_name in pull_exercises:
+                                await ctx.send("Enter a new comment for " + user_exercise_name + ": ")
+
+                                try:
+                                    message = await client.wait_for("message",
+                                                                    check=lambda msg:
+                                                                    msg.author == ctx.author and
+                                                                    msg.channel == ctx.channel,
+                                                                    timeout=30.0)
+                                # Timeout condition
+                                except asyncio.TimeoutError:
+                                    await ctx.send("User Timed Out")
+
+                                else:
+                                    user_input = message.content
+
+                                    # updates weight
+                                    pull_exercises[user_exercise_name].change_comment(user_input)
+                                    await ctx.send("Exercise comment updated successfully")
                         else:
                             await ctx.send("Invalid input")
                             return
@@ -603,7 +652,31 @@ async def update(ctx):
 
                                     # updates weight
                                     leg_exercises[user_exercise_name].change_weight(int(user_input))
+
                                     await ctx.send("Exercise weight updated successfully")
+
+                        # Updates comment
+                        elif user_choice.lower() == "comment":
+                            # Finds exercise to update
+                            if user_exercise_name in leg_exercises:
+                                await ctx.send("Enter a new comment for " + user_exercise_name + ": ")
+
+                                try:
+                                    message = await client.wait_for("message",
+                                                                    check=lambda msg:
+                                                                    msg.author == ctx.author and
+                                                                    msg.channel == ctx.channel,
+                                                                    timeout=30.0)
+                                # Timeout condition
+                                except asyncio.TimeoutError:
+                                    await ctx.send("User Timed Out")
+
+                                else:
+                                    user_input = message.content
+
+                                    # updates weight
+                                    leg_exercises[user_exercise_name].change_comment(user_input)
+                                    await ctx.send("Exercise comment updated successfully")
                         else:
                             await ctx.send("Invalid input")
                             return
