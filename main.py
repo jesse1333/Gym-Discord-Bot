@@ -1,11 +1,87 @@
 import discord
 import asyncio
-from datetime import date
 from DayType import *
 from Exercise import *
+from models import *
 from discord.ext import commands
 
-TOKEN = 'MTEyODc1NTM3Mzg0Nzg3MTU1MQ.G1lSZ5.5qpaMaM6uAMggaGHfBV_laYjPLI_T28of8GP-8'
+
+# SQLAlchemy
+userID = None
+userName = None
+
+
+# Base.metadata.create_all(bind=engine)
+#
+# Session = sessionmaker(bind=engine)
+# session = Session()
+
+
+
+# class Users(Base):
+#     __tablename__ = "users"
+#     userid = Column("userid", Integer, primary_key=True)
+#     daytypes = relationship("daytypes", backref='users')
+#
+#     def __init__(self, userid):
+#         self.userid = userid
+#
+#     def __repr__(self):
+#         return f"(UserID: {self.userid})"
+
+
+# class DayTypes(Base):
+#     __tablename__ = "dayTypes"
+#     daytypeid = Column("daytypeid", Integer, primary_key=True)
+#     user_id = Column(Integer, ForeignKey('userid'))
+#     daytype = Column("type", String)
+#     date = Column("date", String)
+#     exerciseid = relationship("exerciseid", backref='daytypes')
+#
+#
+#     def __init__(self, daytypeid, daytype, date, exerciseid):
+#         self.daytypeid = daytypeid
+#         self.daytype = daytype
+#         self.date = date
+#         self.exerciseid = exerciseid
+#
+#     def __repr__(self):
+#         return f"(DaytypeID: {self.daytypeid} DayType: {self.daytype} Date: {self.date} ExerciseID: {self.exerciseid})"
+
+
+# class Exercises(Base):
+#     __tablename__ = "exercises"
+#     exerciseid = Column(Integer, ForeignKey('exerciseid'))
+#     name = Column("name", String)
+#     weight = Column("weight", Integer)
+#     comment = Column("comment", String)
+#
+#     def __init__(self, exerciseid, name, weight, comment):
+#         self.exerciseid = exerciseid
+#         self.name = name
+#         self.weight = weight
+#         self.comment = comment
+#
+#     def __repr__(self):
+#         return f"(ExerciseID: {self.exerciseid} Name: {self.name} Weight: {self.weight} Comment: {self.comment})"
+
+
+
+# person = Person(12312, "Mike", "Smith", "m", 35)
+# session.add(person)                             # this creates the person in the database
+# session.commit()                                # same concept as git
+
+# results = session.query(Person).all()                                   # query gets the data from the database
+# results = session.query(Person).filter(Person.lastname == "Blue")       # we can filter our queries
+# session.query(Person).filter(Person.lastname.in_(["Anna", "Mike"]))     # checks if in the query
+# print(results)
+
+
+
+
+
+# BOT CODE STARTS HERE
+TOKEN = 'MTEyODc1NTM3Mzg0Nzg3MTU1MQ.Gin1bU.GIuYhXsEzftGrliZSvu8KBJNUROiF7LYp-YplU'
 
 intents = discord.Intents.all()
 
@@ -18,24 +94,42 @@ pull_dayType = {}
 legs_dayType = {}
 
 
-# # Creates Relevant DayType Objects (USE IT WHENEVER WE MAKE A NEW DAYTYPE
-# pushDay = DayType("Push")
-# pullDay = DayType("Pull")
-# legDay = DayType("Legs")
-
-
-
 @client.event
 async def on_ready():                                   # Bot is ready
     print("Bot is ready.")
     print("-----------------")
 
 
+# Updates userID to sender upon message
+@client.event
+async def on_message(message):
+    global userID
+    global userName
+
+    # ignores bot texts
+    if message.author == client.user:
+        await client.process_commands(message)
+
+    else:
+        userID = message.author.id
+        userName = message.author
+
+        # if userID is not in the database, register their userID to database
+
+        user = Users(userID)
+        session.add(user)
+        session.commit()
+        await client.process_commands(message)
+
+
+# Displays all commands
 @client.command()
 async def help(ctx):
     await ctx.send("Commands: !hello")
+    print(f"UserID: {userID}")
 
 
+# Adds a new push dayType
 @client.command()
 async def newpush(ctx):             # ADD IF DAY EXISTS ALREADY
     if current_date() not in push_dayType:
@@ -45,6 +139,7 @@ async def newpush(ctx):             # ADD IF DAY EXISTS ALREADY
         await ctx.send("Push day already exists for " + current_date())
 
 
+# Adds a new pull dayType
 @client.command()
 async def newpull(ctx):
     if current_date() not in pull_dayType:
@@ -54,6 +149,7 @@ async def newpull(ctx):
         await ctx.send("Pull day already exists for " + current_date())
 
 
+# Adds a new leg dayType
 @client.command()
 async def newlegs(ctx):
     if current_date() not in legs_dayType:
@@ -63,8 +159,7 @@ async def newlegs(ctx):
         await ctx.send("Leg day already exists for " + current_date())
 
 
-# Prints out the type of day and the current date
-# TO DO - Print out the exercises too
+# Prints out push day's information
 @client.command()
 async def push(ctx):
     if current_date() not in push_dayType:
@@ -83,8 +178,7 @@ async def push(ctx):
         await ctx.send(output)
 
 
-# Prints out the type of day and the current date
-# TO DO - Print out the exercises too
+# Prints out pull day's information
 @client.command()
 async def pull(ctx):
     if current_date() not in pull_dayType:
@@ -103,8 +197,7 @@ async def pull(ctx):
         await ctx.send(output)
 
 
-# Prints out the type of day and the current date
-# TO DO - Print out the exercises too
+# Prints out leg day's information
 @client.command()
 async def legs(ctx):
     if current_date() not in legs_dayType:
@@ -257,6 +350,7 @@ async def add(ctx):
             await ctx.send("Invalid Input")
 
 
+# Removes an exercise
 @client.command()
 async def remove(ctx):
     user_exercise_name = ""
@@ -379,6 +473,7 @@ async def remove(ctx):
             await ctx.send("Invalid Input")
 
 
+# Updates name, comment, or weight of exercise
 @client.command()
 async def update(ctx):
     user_exercise_name = ""
@@ -783,6 +878,7 @@ async def update(ctx):
 def current_date():
     str_date = datetime.now().strftime("%m-%d-%Y")
     return str_date
+
 
 
 client.run(TOKEN)
